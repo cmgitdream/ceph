@@ -5034,8 +5034,6 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
       {
 	if (maybe_create_new_object(ctx)) {
 	  t->touch(soid);
-	} else {
-	  obs.oi.clear_omap_digest();
 	}
 	map<string, bufferlist> to_set;
 	try {
@@ -5057,6 +5055,7 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	ctx->delta_stats.num_wr++;
       }
       obs.oi.set_flag(object_info_t::FLAG_OMAP);
+      obs.oi.clear_omap_digest();
       break;
 
     case CEPH_OSD_OP_OMAPSETHEADER:
@@ -5077,6 +5076,7 @@ int ReplicatedPG::do_osd_ops(OpContext *ctx, vector<OSDOp>& ops)
 	ctx->delta_stats.num_wr++;
       }
       obs.oi.set_flag(object_info_t::FLAG_OMAP);
+      obs.oi.clear_omap_digest();
       break;
 
     case CEPH_OSD_OP_OMAPCLEAR:
@@ -11192,7 +11192,8 @@ int ReplicatedPG::recover_backfill(
   for (set<pg_shard_t>::iterator i = backfill_targets.begin();
        i != backfill_targets.end();
        ++i) {
-    peer_backfill_info[*i].trim_to(last_backfill_started);
+    peer_backfill_info[*i].trim_to(
+      MAX(peer_info[*i].last_backfill, last_backfill_started));
   }
   backfill_info.trim_to(last_backfill_started);
 
