@@ -84,6 +84,7 @@ int crush_find_rule(const struct crush_map *map, int ruleset, int type, int size
 static int bucket_perm_choose(struct crush_bucket *bucket,
 			      int x, int r)
 {
+	printf("%s\n", __func__);
 	unsigned int pr = r % bucket->size;
 	unsigned int i, s;
 
@@ -352,6 +353,7 @@ static int bucket_straw2_choose(struct crush_bucket_straw2 *bucket,
 static int crush_bucket_choose(struct crush_bucket *in, int x, int r)
 {
 	dprintk(" crush_bucket_choose %d x=%d r=%d\n", in->id, x, r);
+	printf("\t\tcrush_bucket_choose itemtype:%d item:%d x=%d r=%d\n", in->type, in->id, x, r);
 	BUG_ON(in->size == 0);
 	switch (in->alg) {
 	case CRUSH_BUCKET_UNIFORM:
@@ -384,15 +386,26 @@ static int is_out(const struct crush_map *map,
 		  const __u32 *weight, int weight_max,
 		  int item, int x)
 {
-	if (item >= weight_max)
+	if (item >= weight_max) {
+		printf("\t\t%s item:%d >= weight_max:%d\n", __func__,item, weight_max);
 		return 1;
-	if (weight[item] >= 0x10000)
+	}
+	if (weight[item] >= 0x10000) {
+		printf("\t\t%s weight[%d]:%d >= 0x10000\n", __func__,item, weight[item]);
 		return 0;
-	if (weight[item] == 0)
+	}
+	if (weight[item] == 0) {
+		printf("\t\t%s weight[%d]:%d == 0\n", __func__,item, weight[item]);
 		return 1;
+	}
 	if ((crush_hash32_2(CRUSH_HASH_RJENKINS1, x, item) & 0xffff)
-	    < weight[item])
+	    < weight[item]) {
+		printf("\t\t%s (crush_hash32_2(CRUSH_HASH_RJENKINS1,%d, %d) & 0xffff):%d < weight[%d]:%d\n",
+			__func__, x, item, crush_hash32_2(CRUSH_HASH_RJENKINS1,x,item) & 0xffff,
+			item, weight[item] );
 		return 0;
+	}
+	printf("\t\t%s default is_out == 1\n", __func__);
 	return 1;
 }
 
@@ -430,6 +443,7 @@ static int crush_choose_firstn(const struct crush_map *map,
 			       int *out2,
 			       int parent_r)
 {
+	printf("%s : %d\n", __func__, bucket->id);
 	int rep;
 	unsigned int ftotal, flocal;
 	int retry_descent, retry_bucket, skip_rep;
@@ -441,7 +455,8 @@ static int crush_choose_firstn(const struct crush_map *map,
 	int collide, reject;
 	int count = out_size;
 
-	dprintk("CHOOSE%s bucket %d x %d outpos %d numrep %d tries %d recurse_tries %d local_retries %d local_fallback_retries %d parent_r %d\n",
+	//dprintk("CHOOSE%s bucket %d x %d outpos %d numrep %d tries %d recurse_tries %d local_retries %d local_fallback_retries %d parent_r %d\n",
+	printf("  CHOOSE%s bucket %d x %d outpos %d numrep %d tries %d recurse_tries %d local_retries %d local_fallback_retries %d parent_r %d\n",
 		recurse_to_leaf ? "_LEAF" : "",
 		bucket->id, x, outpos, numrep,
 		tries, recurse_tries, local_retries, local_fallback_retries,
@@ -466,6 +481,7 @@ static int crush_choose_firstn(const struct crush_map *map,
 
 				/* bucket choose */
 				if (in->size == 0) {
+					printf("\tbucekct:%d is empty\n", in->type);
 					reject = 1;
 					goto reject;
 				}
@@ -486,13 +502,16 @@ static int crush_choose_firstn(const struct crush_map *map,
 					itemtype = map->buckets[-1-item]->type;
 				else
 					itemtype = 0;
-				dprintk("  item %d type %d\n", item, itemtype);
+				//dprintk("  item %d type %d\n", item, itemtype);
+				printf("\trep:%d, item %d itemtype %d, type %d, choose_leaf:%d\n", rep, item, itemtype, type, recurse_to_leaf);
 
 				/* keep going? */
 				if (itemtype != type) {
+					printf("\titemtype:%d != type:%d\n", itemtype, type);
 					if (item >= 0 ||
 					    (-1-item) >= map->max_buckets) {
-						dprintk("   bad item type %d\n", type);
+						//dprintk("   bad item type %d\n", type);
+						printf("\tbad item type %d\n", type);
 						skip_rep = 1;
 						break;
 					}
@@ -528,9 +547,11 @@ static int crush_choose_firstn(const struct crush_map *map,
 							 0,
 							 vary_r,
 							 NULL,
-							 sub_r) <= outpos)
+							 sub_r) <= outpos) {
 							/* didn't get leaf */
 							reject = 1;
+							printf("\tbucket:%d, bucket item:%d  didn't get leaf\n", in->type, in->id);
+							}
 					} else {
 						/* we already have a leaf! */
 						out2[outpos] = item;
@@ -539,10 +560,12 @@ static int crush_choose_firstn(const struct crush_map *map,
 
 				if (!reject) {
 					/* out? */
-					if (itemtype == 0)
+					if (itemtype == 0) {
 						reject = is_out(map, weight,
 								weight_max,
 								item, x);
+						printf("\treject = is_out :%d\n", reject);
+					}
 					else
 						reject = 0;
 				}
@@ -552,33 +575,43 @@ reject:
 					ftotal++;
 					flocal++;
 
-					if (collide && flocal <= local_retries)
+					if (collide && flocal <= local_retries) {
+						printf("\tretry_bucket:1, collide:%d && flocal:%d <= local_retries:%d\n", collide, flocal, local_retries);
 						/* retry locally a few times */
 						retry_bucket = 1;
-					else if (local_fallback_retries > 0 &&
-						 flocal <= in->size + local_fallback_retries)
+					} else if (local_fallback_retries > 0 &&
+						 flocal <= in->size + local_fallback_retries) {
+						printf("\tretry_bucket:1, flocal:%d <= in->size:%d + local_fallback_retries:%d\n",
+							flocal, in->size, local_fallback_retries);
 						/* exhaustive bucket search */
 						retry_bucket = 1;
-					else if (ftotal < tries)
+					} else if (ftotal < tries) {
+						printf("\tretry_descent:1, ftotal:%d < tries:%d\n", ftotal, tries);
 						/* then retry descent */
 						retry_descent = 1;
-					else
+					} else {
+						printf("\tskip_rep:1\n");
 						/* else give up */
 						skip_rep = 1;
-					dprintk("  reject %d  collide %d  "
+					}
+					dprintk("\treject %d  collide %d  "
 						"ftotal %u  flocal %u\n",
 						reject, collide, ftotal,
 						flocal);
 				}
+				printf("\treject:%d, collide:%d, ftotal:%d, flocal:%d, retry_bucket:%d, retry_desent:%d : %d\n", 
+					reject, collide, ftotal, flocal, retry_bucket, retry_descent, bucket->id);
 			} while (retry_bucket);
 		} while (retry_descent);
 
 		if (skip_rep) {
 			dprintk("skip rep\n");
+			printf("skip rep : %d\n", bucket->id);
 			continue;
 		}
 
-		dprintk("CHOOSE got %d\n", item);
+		//dprintk("CHOOSE got %d\n", item);
+		printf("CHOOSE got itemtype %d, %d : %d\n", itemtype, item, bucket->id);
 		out[outpos] = item;
 		outpos++;
 		count--;
@@ -587,7 +620,8 @@ reject:
 			map->choose_tries[ftotal]++;
 	}
 
-	dprintk("CHOOSE returns %d\n", outpos);
+	//dprintk("CHOOSE returns %d\n", outpos);
+	printf("CHOOSE returns %d : %d\n", outpos, bucket->id);
 	return outpos;
 }
 
@@ -793,6 +827,7 @@ int crush_do_rule(const struct crush_map *map,
 		  const __u32 *weight, int weight_max,
 		  int *scratch)
 {
+	printf("%s\n", __func__);
 	int result_len;
 	int *a = scratch;
 	int *b = scratch + result_max;
