@@ -481,7 +481,7 @@ static int crush_choose_firstn(const struct crush_map *map,
 
 				/* bucket choose */
 				if (in->size == 0) {
-					printf("\tbucekct:%d is empty\n", in->type);
+					printf("\t%d -- bucekct:%d is empty\n", bucket->id, in->type);
 					reject = 1;
 					goto reject;
 				}
@@ -503,15 +503,15 @@ static int crush_choose_firstn(const struct crush_map *map,
 				else
 					itemtype = 0;
 				//dprintk("  item %d type %d\n", item, itemtype);
-				printf("\trep:%d, item %d itemtype %d, type %d, choose_leaf:%d\n", rep, item, itemtype, type, recurse_to_leaf);
+				printf("\t%d -- rep:%d, item %d itemtype %d, type %d, choose_leaf:%d\n", bucket->id, rep, item, itemtype, type, recurse_to_leaf);
 
 				/* keep going? */
 				if (itemtype != type) {
-					printf("\titemtype:%d != type:%d\n", itemtype, type);
+					printf("\t%d -- itemtype:%d != type:%d\n", bucket->id, itemtype, type);
 					if (item >= 0 ||
 					    (-1-item) >= map->max_buckets) {
 						//dprintk("   bad item type %d\n", type);
-						printf("\tbad item type %d\n", type);
+						printf("\t%d -- bad item type %d\n", bucket->id, type);
 						skip_rep = 1;
 						break;
 					}
@@ -550,7 +550,7 @@ static int crush_choose_firstn(const struct crush_map *map,
 							 sub_r) <= outpos) {
 							/* didn't get leaf */
 							reject = 1;
-							printf("\tbucket:%d, bucket item:%d  didn't get leaf\n", in->type, in->id);
+							printf("\t%d -- sub:%d didn't get leaf\n", bucket, in->id);
 							}
 					} else {
 						/* we already have a leaf! */
@@ -564,7 +564,7 @@ static int crush_choose_firstn(const struct crush_map *map,
 						reject = is_out(map, weight,
 								weight_max,
 								item, x);
-						printf("\treject = is_out :%d\n", reject);
+						printf("\t%d -- reject = is_out :%d\n", bucket->id, reject);
 					}
 					else
 						reject = 0;
@@ -576,37 +576,37 @@ reject:
 					flocal++;
 
 					if (collide && flocal <= local_retries) {
-						printf("\tretry_bucket:1, collide:%d && flocal:%d <= local_retries:%d\n", collide, flocal, local_retries);
+						printf("\t%d -- retry_bucket:1, collide:%d && flocal:%d <= local_retries:%d\n", bucket->id, collide, flocal, local_retries);
 						/* retry locally a few times */
 						retry_bucket = 1;
 					} else if (local_fallback_retries > 0 &&
 						 flocal <= in->size + local_fallback_retries) {
-						printf("\tretry_bucket:1, flocal:%d <= in->size:%d + local_fallback_retries:%d\n",
-							flocal, in->size, local_fallback_retries);
+						printf("\t%d -- retry_bucket:1, flocal:%d <= in->size:%d + local_fallback_retries:%d\n",
+							bucket->id, flocal, in->size, local_fallback_retries);
 						/* exhaustive bucket search */
 						retry_bucket = 1;
 					} else if (ftotal < tries) {
-						printf("\tretry_descent:1, ftotal:%d < tries:%d\n", ftotal, tries);
+						printf("\t%d -- retry_descent:1, ftotal:%d < tries:%d\n", bucket->id, ftotal, tries);
 						/* then retry descent */
 						retry_descent = 1;
 					} else {
-						printf("\tskip_rep:1\n");
+						printf("\t%d -- skip_rep:1\n", bucket->id);
 						/* else give up */
 						skip_rep = 1;
 					}
-					dprintk("\treject %d  collide %d  "
+					dprintk("\t%d -- reject %d  collide %d  "
 						"ftotal %u  flocal %u\n",
-						reject, collide, ftotal,
+						bucket->id, reject, collide, ftotal,
 						flocal);
 				}
-				printf("\treject:%d, collide:%d, ftotal:%d, flocal:%d, retry_bucket:%d, retry_desent:%d : %d\n", 
-					reject, collide, ftotal, flocal, retry_bucket, retry_descent, bucket->id);
+				printf("\t%d -- reject:%d, collide:%d, ftotal:%d, flocal:%d, retry_bucket:%d, retry_desent:%d : %d\n", 
+					bucket->id, reject, collide, ftotal, flocal, retry_bucket, retry_descent, bucket->id);
 			} while (retry_bucket);
 		} while (retry_descent);
 
 		if (skip_rep) {
 			dprintk("skip rep\n");
-			printf("skip rep : %d\n", bucket->id);
+			printf("%d -- skip rep\n", bucket->id);
 			continue;
 		}
 
