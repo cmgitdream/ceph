@@ -230,6 +230,19 @@ COMMAND_WITH_FLAG("scrub", "scrub the monitor stores (DEPRECATED)", \
              "mon", "rw", "cli,rest", \
              FLAG(DEPRECATED))
 COMMAND("fsid", "show cluster FSID/UUID", "mon", "r", "cli,rest")
+COMMAND("kv set " \
+	"name=key,type=CephString " \
+	"name=val,type=CephString", \
+	"set key/value pair on monitor DBstore", \
+	"mon", "rw", "cli,rest")
+COMMAND("kv get " \
+	"name=key,type=CephString", \
+	"get value from monitor DBstore", \
+	"mon", "rw", "cli,rest")
+COMMAND("kv rm " \
+	"name=key,type=CephString", \
+	"remove key/value from monitor DBstore", \
+	"mon", "rw", "cli,rest")
 COMMAND("log name=logtext,type=CephString,n=N", \
 	"log supplied text to the monitor log", "mon", "rw", "cli,rest")
 COMMAND_WITH_FLAG("injectargs " \
