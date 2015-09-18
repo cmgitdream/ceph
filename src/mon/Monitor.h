@@ -654,6 +654,10 @@ public:
     return (class LogMonitor*) paxos_service[PAXOS_LOG];
   }
 
+  class KVMonitor *kvmon() {
+    return (class KVMonitor*) paxos_service[PAXOS_KV];
+  }
+
   friend class Paxos;
   friend class OSDMonitor;
   friend class MDSMonitor;
