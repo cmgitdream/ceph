@@ -15,6 +15,7 @@ libmon_la_SOURCES = \
 	mon/PGMonitor.cc \
 	mon/LogMonitor.cc \
 	mon/AuthMonitor.cc \
+	mon/KVMonitor.cc \
 	mon/Elector.cc \
 	mon/HealthMonitor.cc \
 	mon/DataHealthService.cc \
@@ -30,6 +31,7 @@ noinst_HEADERS += \
 	mon/ConfigKeyService.h \
 	mon/HealthMonitor.h \
 	mon/HealthService.h \
+	mon/KVMonitor.h \
 	mon/MDSMonitor.h \
 	mon/MonmapMonitor.h \
 	mon/MonCap.h \
