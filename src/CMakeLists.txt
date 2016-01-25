@@ -393,7 +393,8 @@ add_library(librados ${CEPH_SHARED} ${librados_srcs}
   $<TARGET_OBJECTS:heap_profiler_objs>
   $<TARGET_OBJECTS:common_util_obj>)
 add_dependencies(librados osdc)
-target_link_libraries(librados PRIVATE osdc osd os global common cls_lock_client
+#target_link_libraries(librados PRIVATE osdc osd os global common cls_lock_client
+target_link_libraries(librados osdc osd os global common cls_lock_client
   ${BLKID_LIBRARIES}
   ${CRYPTO_LIBS} ${EXTRALIBS} ${TCMALLOC_LIBS})
 if(${ENABLE_SHARED})
@@ -717,8 +718,8 @@ target_link_libraries(crushtool global)
 install(TARGETS crushtool DESTINATION bin)
 
 # Support/Tools
-add_subdirectory(gmock)
-add_subdirectory(test)
+#add_subdirectory(gmock)
+#add_subdirectory(test)
 set(cephfs_srcs cephfs.cc)
 add_executable(cephfstool ${cephfs_srcs})
 target_link_libraries(cephfstool common ${EXTRALIBS})
@@ -925,7 +926,8 @@ if(${WITH_RBD})
   add_library(librbd ${CEPH_SHARED} ${librbd_srcs}
     $<TARGET_OBJECTS:osdc_rbd_objs>
     $<TARGET_OBJECTS:common_util_obj>)
-  target_link_libraries(librbd PRIVATE librados common journal
+  #target_link_libraries(librbd PRIVATE librados common journal
+  target_link_libraries(librbd librados common journal
     cls_lock_client cls_rbd_client cls_journal_client
     ${CMAKE_DL_LIBS})
   if(${ENABLE_SHARED})
@@ -993,7 +995,8 @@ if(${WITH_RBD})
       rbd_replay/rbd_loc.cc
       rbd_replay/Replayer.cc)
   add_library(librbd_replay STATIC ${librbd_replay_srcs})
-  target_link_libraries(librbd_replay PRIVATE librbd_replay_types librbd librados global udev)
+  #target_link_libraries(librbd_replay PRIVATE librbd_replay_types librbd librados global udev)
+  target_link_libraries(librbd_replay librbd_replay_types librbd librados global udev)
 
   add_executable(rbd_replay
     rbd_replay/rbd-replay.cc
