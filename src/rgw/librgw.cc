@@ -430,7 +430,7 @@ namespace rgw {
 
     global_init(&def_args, args,
 		CEPH_ENTITY_TYPE_CLIENT,
-		CODE_ENVIRONMENT_DAEMON,
+		CODE_ENVIRONMENT_LIBRARY,
 		CINIT_FLAG_UNPRIVILEGED_DAEMON_DEFAULTS);
 
     Mutex mutex("main");
@@ -519,8 +519,6 @@ namespace rgw {
     derr << "shutting down" << dendl;
 
     fe->stop();
-
-    fe->join();
 
     delete fe;
     delete fec;
