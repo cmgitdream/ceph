@@ -1183,9 +1183,9 @@ protected:
 		  boost::string_view dump_root = "",
 		  int depth = -1);
 public:
-  int dump_cache() { return dump_cache(NULL, NULL); }
-  int dump_cache(boost::string_view filename);
-  int dump_cache(Formatter *f);
+  int dump_cache() { return dump_cache(boost::string_view(""),  (Formatter *)NULL); }
+  int dump_cache(boost::string_view filename, inodeno_t ino = 0);
+  int dump_cache(Formatter *f, inodeno_t ino = 0);
   int dump_cache(boost::string_view dump_root, int depth, Formatter *f);
 
   void cache_status(Formatter *f);
