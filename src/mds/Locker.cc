@@ -570,20 +570,29 @@ bool Locker::acquire_locks(MDRequestRef& mdr,
       cancel_locking(mdr.get(), &issue_set);
     }
     if (xlocks.count(*p)) {
-      marker.message = "failed to xlock, waiting";
+      stringstream ss;
+      ss << "failed to xlock, waiting on " << **p << " " << *(*p)->get_parent();
+      marker.message = ss.str().c_str();
       if (!xlock_start(*p, mdr)) 
 	goto out;
       dout(10) << " got xlock on " << **p << " " << *(*p)->get_parent() << dendl;
     } else if (need_wrlock || need_remote_wrlock) {
       if (need_remote_wrlock && !mdr->remote_wrlocks.count(*p)) {
-        marker.message = "waiting for remote wrlocks";
+	stringstream ss;
+	ss << "waiting for remote wrlocks on " << **p << " " << *(*p)->get_parent();
+	marker.message = ss.str().c_str();
 	remote_wrlock_start(*p, (*remote_wrlocks)[*p], mdr);
 	goto out;
       }
       if (need_wrlock && !mdr->wrlocks.count(*p)) {
-        marker.message = "failed to wrlock, waiting";
+	stringstream ss;
+	ss << "failed to wrlock, waiting on " << **p << " " << *(*p)->get_parent();
+	marker.message = ss.str().c_str();
 	if (need_remote_wrlock && !(*p)->can_wrlock(mdr->get_client())) {
-	  marker.message = "failed to wrlock, dropping remote wrlock and waiting";
+	  stringstream ss2;
+	  ss2 << "failed to wrlock, dropping remote wrlock and waiting on " << **p
+		<< " " << *(*p)->get_parent();
+	  marker.message = ss2.str().c_str();
 	  // can't take the wrlock because the scatter lock is gathering. need to
 	  // release the remote wrlock, so that the gathering process can finish.
 	  remote_wrlock_finish(*p, mdr->remote_wrlocks[*p], mdr.get());
@@ -614,7 +623,9 @@ bool Locker::acquire_locks(MDRequestRef& mdr,
 	}
       }
 
-      marker.message = "failed to rdlock, waiting";
+      stringstream ss;
+      ss << "failed to rdlock, waiting on " << **p << " " << *(*p)->get_parent();
+      marker.message = ss.str().c_str();
       if (!rdlock_start(*p, mdr)) 
 	goto out;
       dout(10) << " got rdlock on " << **p << " " << *(*p)->get_parent() << dendl;
